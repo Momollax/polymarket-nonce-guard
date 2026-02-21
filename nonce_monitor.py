@@ -116,7 +116,7 @@ class NonceStats:
 
 # ─── Event logging ───────────────────────────────────────────────────────────
 def log_event(event: dict, stats: NonceStats):
-    """Log a nonce event to console and file."""
+    """Log a nonce event to console, file, and emit universal alert signal."""
     stats.add(event)
     
     w = event["window"]
@@ -131,6 +131,34 @@ def log_event(event: dict, stats: NonceStats):
     
     with open(EVENTS_FILE, "a") as f:
         f.write(json.dumps(event) + "\n")
+
+    # Emit universal alert signal
+    try:
+        from signal import emit as signal_emit, NONCE_INCREMENT, SUSPICIOUS_TIMING, NEW_EXPLOITER, INFO, WARNING
+        is_late = w["remaining_secs"] < 30
+        is_new = len(stats.by_address.get(event["caller"].lower(), [])) <= 1
+        
+        code = SUSPICIOUS_TIMING if is_late else (NEW_EXPLOITER if is_new else NONCE_INCREMENT)
+        severity = WARNING if is_late else INFO
+        
+        signal_emit(
+            code=code,
+            severity=severity,
+            source="nonce_monitor",
+            data={
+                "caller": event["caller"],
+                "tx_hash": event["tx_hash"],
+                "block": event.get("block"),
+                "market_window": {
+                    "window_id": f"btc-updown-5m-{w['window_start']}",
+                    "seconds_remaining": w["remaining_secs"],
+                    "pct_elapsed": w.get("pct_elapsed", 0),
+                },
+                "action": "CANCEL" if is_late else "HOLD",
+            },
+        )
+    except Exception:
+        pass  # signal module optional
 
 
 # ─── Block polling monitor ──────────────────────────────────────────────────
