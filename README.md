@@ -2,7 +2,7 @@
 
 Detect and defend against the **nonce race** on Polymarket's CTF Exchange.
 ###
-LEGIT BOT BOT VALUE BOT VALUE BOT VALUE
+LEGIT BOT BOT VALUE BOT VALUE BOT VALUEa
  on Polymarket call `incrementNonce()` on the [CTF Exchange contract](https://polygonscan.com/address/0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E) to invalidate their losing orders before the operator can settle them. This means:
 
 - They place bets on both sides of a market
